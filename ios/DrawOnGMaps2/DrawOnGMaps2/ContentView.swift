@@ -28,6 +28,8 @@ struct ContentView: View {
 
     /// Bridge exposing the underlying GMSMapView.
     @StateObject private var bridge = MapBridge()
+    /// Bridge exposing the underlying GMSPanoramaView.
+    @StateObject private var streetBridge = StreetViewBridge()
     /// Observable location manager helper.
     @StateObject private var locationManager = LocationManager()
     
@@ -55,8 +57,8 @@ struct ContentView: View {
         ZStack {
             if isInStreetView {
                 // Full-screen Street View
-  //              StreetViewContainer(coordinate: streetViewCoordinate)
-   //                 .ignoresSafeArea()
+                StreetViewContainer(coordinate: streetViewCoordinate, bridge: streetBridge)
+                    .ignoresSafeArea()
                 
                 if drawingsLocked || isDrawingOnStreet {
                     DrawingOverlayView(isDrawing: $isDrawingOnStreet, paths: $streetPaths)
@@ -211,6 +213,7 @@ struct ContentView: View {
                 // #endregion
             }
         case .notDetermined:
+            awaitingLocateMe = true
             locationManager.requestAuthorization()
         case .denied, .restricted:
             // Optionally present guidance to enable location in Settings

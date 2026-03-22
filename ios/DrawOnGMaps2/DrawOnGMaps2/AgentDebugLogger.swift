@@ -1,9 +1,36 @@
 import Foundation
 
+#if DEBUG
 enum AgentDebugLogger {
-    private static let logPath = "/Users/cristianniculae/Projects/.cursor/debug-e55e2d.log"
-    private static let sessionId = "e55e2d"
-    private static let endpoint = URL(string: "http://127.0.0.1:7771/ingest/2d7bc145-02b3-4ed1-9469-a58896aec9b1")
+    private enum Env {
+        static let logPath = "AGENT_DEBUG_LOG_PATH"
+        static let endpoint = "AGENT_DEBUG_ENDPOINT"
+        static let sessionId = "AGENT_DEBUG_SESSION_ID"
+    }
+
+    private static var logPath: String {
+        if let configured = ProcessInfo.processInfo.environment[Env.logPath], !configured.isEmpty {
+            return configured
+        }
+        let base = FileManager.default.temporaryDirectory
+        return base.appendingPathComponent("agent-debug.log").path
+    }
+
+    private static var endpoint: URL? {
+        guard
+            let raw = ProcessInfo.processInfo.environment[Env.endpoint],
+            !raw.isEmpty
+        else { return nil }
+        return URL(string: raw)
+    }
+
+    private static var sessionId: String? {
+        guard
+            let raw = ProcessInfo.processInfo.environment[Env.sessionId],
+            !raw.isEmpty
+        else { return nil }
+        return raw
+    }
 
     static func log(
         runId: String = "initial",
@@ -13,7 +40,6 @@ enum AgentDebugLogger {
         data: [String: Any] = [:]
     ) {
         var payload: [String: Any] = [
-            "sessionId": sessionId,
             "runId": runId,
             "hypothesisId": hypothesisId,
             "location": location,
@@ -21,6 +47,9 @@ enum AgentDebugLogger {
             "data": data,
             "timestamp": Int(Date().timeIntervalSince1970 * 1000)
         ]
+        if let sessionId {
+            payload["sessionId"] = sessionId
+        }
         payload["id"] = "log_\(payload["timestamp"] ?? 0)_\(UUID().uuidString)"
 
         guard
@@ -32,13 +61,10 @@ enum AgentDebugLogger {
         jsonLine.append("\n")
         guard let lineData = jsonLine.data(using: .utf8) else { return }
 
-        // #region agent log
         NSLog("AGENT_DEBUG %@", jsonLine.trimmingCharacters(in: .newlines))
-        // #endregion
 
         let fileURL = URL(fileURLWithPath: logPath)
         let fileManager = FileManager.default
-
         if !fileManager.fileExists(atPath: logPath) {
             try? lineData.write(to: fileURL)
         } else if let fileHandle = FileHandle(forWritingAtPath: logPath) {
@@ -60,13 +86,28 @@ enum AgentDebugLogger {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(sessionId, forHTTPHeaderField: "X-Debug-Session-Id")
+        if let sessionId {
+            request.setValue(sessionId, forHTTPHeaderField: "X-Debug-Session-Id")
+        }
         request.httpBody = body
 
-        URLSession.shared.dataTask(with: request) { _, _, _ in
-            // #region agent log
-            // Intentionally ignore network errors for non-blocking debug instrumentation.
-            // #endregion
-        }.resume()
+        URLSession.shared.dataTask(with: request) { _, _, _ in }.resume()
     }
 }
+#else
+enum AgentDebugLogger {
+    static func log(
+        runId: String = "initial",
+        hypothesisId: String,
+        location: String,
+        message: String,
+        data: [String: Any] = [:]
+    ) {
+        _ = runId
+        _ = hypothesisId
+        _ = location
+        _ = message
+        _ = data
+    }
+}
+#endif
