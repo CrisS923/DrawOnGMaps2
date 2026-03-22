@@ -1,0 +1,13 @@
+# Xcode user data and build products
+**/xcuserdata/
+**/*.xcuserstate
+DerivedData/
+.DS_Store
+
+# SwiftPM / SPM
+.build/
+
+# Secrets and local env
+ios/DrawOnGMaps2/Config/Secrets.xcconfig
+.env
+.env.*

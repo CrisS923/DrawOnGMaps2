@@ -12,6 +12,7 @@
 
 /* Begin PBXFileReference section */
 		FFF3995C2F6745B900E8BA4D /* DrawOnGMaps2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrawOnGMaps2.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFBEEFC02F68000000000000 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Secrets.xcconfig; path = Config/Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -37,6 +38,7 @@
 		FFF399532F6745B900E8BA4D = {
 			isa = PBXGroup;
 			children = (
+				FFBEEFC02F68000000000000 /* Secrets.xcconfig */,
 				FFF3995E2F6745B900E8BA4D /* DrawOnGMaps2 */,
 				FFF3995D2F6745B900E8BA4D /* Products */,
 			);
@@ -255,6 +257,7 @@
 		};
 		FFF399682F6745BA00E8BA4D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = FFBEEFC02F68000000000000 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -263,6 +266,7 @@
 				DEVELOPMENT_TEAM = 7AB4Y6VPL7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_GMSApiKey = $(GOOGLE_MAPS_API_KEY);
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to center the map and enter Street View near you.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -289,6 +293,7 @@
 		};
 		FFF399692F6745BA00E8BA4D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = FFBEEFC02F68000000000000 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -297,6 +302,7 @@
 				DEVELOPMENT_TEAM = 7AB4Y6VPL7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_GMSApiKey = $(GOOGLE_MAPS_API_KEY);
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is used to center the map and enter Street View near you.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
