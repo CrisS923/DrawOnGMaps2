@@ -1,7 +1,18 @@
+/**
+ MapContainerView.swift
+ 
+ SwiftUI wrapper for GMSMapView.
+ Responsibilities:
+ - Creates and configures the Google map view.
+ - Keeps camera bindings (center/zoom) in sync with SwiftUI state.
+ - Disables heavy features by default for performance.
+ */
+
 import SwiftUI
 import GoogleMaps
 import CoreLocation
 
+// MARK: - UIViewRepresentable
 struct MapContainerView: UIViewRepresentable {
     @Binding var centerCoordinate: CLLocationCoordinate2D
     @Binding var currentZoom: Float
@@ -15,16 +26,21 @@ struct MapContainerView: UIViewRepresentable {
                                               zoom: currentZoom,
                                               bearing: 0,
                                               viewingAngle: 0)
-        let mapView = GMSMapView(frame: .zero)
-        mapView.camera = camera
+        let options = GMSMapViewOptions()
+        options.camera = camera
+        let mapView = GMSMapView(options: options)
+        mapView.mapType = .satellite
         mapView.delegate = context.coordinator
         mapView.settings.zoomGestures = true
         mapView.settings.scrollGestures = true
+        mapView.settings.allowScrollGesturesDuringRotateOrZoom = true
         
         // Turn off heavy features by default for better performance
-        mapView.settings.tiltGestures = false
-        mapView.settings.rotateGestures = false
-        mapView.isBuildingsEnabled = false
+        mapView.settings.tiltGestures = true
+        mapView.settings.rotateGestures = true
+        mapView.isBuildingsEnabled = true
+        mapView.isTrafficEnabled = false
+        mapView.setMinZoom(1, maxZoom: 21)
         
         // Enable user location display and location button
         mapView.isMyLocationEnabled = true
@@ -36,6 +52,7 @@ struct MapContainerView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: GMSMapView, context: Context) {
+        if context.coordinator.isUserGesture { return } // avoid fighting active gestures
         // Avoid redundant animation if camera is already at target and zoom close enough
         if uiView.camera.target.latitude == centerCoordinate.latitude &&
             uiView.camera.target.longitude == centerCoordinate.longitude &&
@@ -43,21 +60,24 @@ struct MapContainerView: UIViewRepresentable {
             return
         }
         
-        let camera = GMSCameraPosition.camera(withLatitude: centerCoordinate.latitude,
-                                              longitude: centerCoordinate.longitude,
-                                              zoom: currentZoom,
-                                              bearing: uiView.camera.bearing,
-                                              viewingAngle: uiView.camera.viewingAngle)
-        uiView.animate(to: camera)
+        let update = GMSCameraUpdate.setTarget(centerCoordinate, zoom: currentZoom)
+        uiView.moveCamera(update)
     }
 
+    // MARK: - Coordinator
     class Coordinator: NSObject, GMSMapViewDelegate {
         var parent: MapContainerView
         weak var mapView: GMSMapView?
+        var isUserGesture = false
 
         init(_ parent: MapContainerView) { self.parent = parent }
 
+        func mapView(_ mapView: GMSMapView, willMove gesture: Bool) {
+            isUserGesture = gesture
+        }
+
         func mapView(_ mapView: GMSMapView, idleAt position: GMSCameraPosition) {
+            isUserGesture = false
             parent.centerCoordinate = position.target
             parent.currentZoom = position.zoom
         }
