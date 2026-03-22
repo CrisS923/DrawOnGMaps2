@@ -1,0 +1,26 @@
+import SwiftUI
+import GoogleMaps
+
+@main
+struct DrawOnGMaps2App: App {
+
+    init() {
+        GMSServices.provideAPIKey("AIzaSyD_lI8aoe8fVUkd9Vj-UNumKue0Qe_Ezb0 ")
+        // #region agent log
+        AgentDebugLogger.log(
+            runId: "initial",
+            hypothesisId: "H6",
+            location: "DrawOnGMaps2App.swift:init",
+            message: "App init executed",
+            data: [:]
+        )
+        // #endregion
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+
