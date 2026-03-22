@@ -3,25 +3,47 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FF0101010000000000000001 /* AgentDebugLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0100010000000000000001 /* AgentDebugLogger.swift */; };
+		FF0101010000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0100020000000000000002 /* ContentView.swift */; };
+		FF0101010000000000000003 /* DebounceHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0100030000000000000003 /* DebounceHelpers.swift */; };
+		FF0101010000000000000004 /* DrawOnGMaps2App.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0100040000000000000004 /* DrawOnGMaps2App.swift */; };
+		FF0101010000000000000005 /* DrawingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0100050000000000000005 /* DrawingOverlayView.swift */; };
+		FF0101010000000000000006 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0100060000000000000006 /* LocationManager.swift */; };
+		FF0101010000000000000007 /* MapBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0100070000000000000007 /* MapBridge.swift */; };
+		FF0101010000000000000008 /* MapContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0100080000000000000008 /* MapContainerView.swift */; };
+		FF0101010000000000000009 /* MapControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0100090000000000000009 /* MapControlsView.swift */; };
+		FF010101000000000000000A /* PegmanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF01000A000000000000000A /* PegmanView.swift */; };
+		FF010101000000000000000B /* StreetViewBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF01000B000000000000000B /* StreetViewBridge.swift */; };
+		FF010101000000000000000C /* StreetViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF01000C000000000000000C /* StreetViewContainer.swift */; };
+		FF010101000000000000000D /* StreetViewControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF01000D000000000000000D /* StreetViewControlsView.swift */; };
+		FF010101000000000000000E /* StreetViewZoomController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF01000E000000000000000E /* StreetViewZoomController.swift */; };
+		FF010101000000000000000F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FF01000F000000000000000F /* Assets.xcassets */; };
 		FF30EE2D2F67615E00D71528 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = FF30EE2C2F67615E00D71528 /* GoogleMaps */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		FF0100010000000000000001 /* AgentDebugLogger.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AgentDebugLogger.swift; sourceTree = "<group>"; };
+		FF0100020000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		FF0100030000000000000003 /* DebounceHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DebounceHelpers.swift; sourceTree = "<group>"; };
+		FF0100040000000000000004 /* DrawOnGMaps2App.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DrawOnGMaps2App.swift; sourceTree = "<group>"; };
+		FF0100050000000000000005 /* DrawingOverlayView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DrawingOverlayView.swift; sourceTree = "<group>"; };
+		FF0100060000000000000006 /* LocationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		FF0100070000000000000007 /* MapBridge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapBridge.swift; sourceTree = "<group>"; };
+		FF0100080000000000000008 /* MapContainerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapContainerView.swift; sourceTree = "<group>"; };
+		FF0100090000000000000009 /* MapControlsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapControlsView.swift; sourceTree = "<group>"; };
+		FF01000A000000000000000A /* PegmanView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PegmanView.swift; sourceTree = "<group>"; };
+		FF01000B000000000000000B /* StreetViewBridge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StreetViewBridge.swift; sourceTree = "<group>"; };
+		FF01000C000000000000000C /* StreetViewContainer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StreetViewContainer.swift; sourceTree = "<group>"; };
+		FF01000D000000000000000D /* StreetViewControlsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StreetViewControlsView.swift; sourceTree = "<group>"; };
+		FF01000E000000000000000E /* StreetViewZoomController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StreetViewZoomController.swift; sourceTree = "<group>"; };
+		FF01000F000000000000000F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FFF3995C2F6745B900E8BA4D /* DrawOnGMaps2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DrawOnGMaps2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFBEEFC02F68000000000000 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Secrets.xcconfig; path = Config/Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		FFF3995E2F6745B900E8BA4D /* DrawOnGMaps2 */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = DrawOnGMaps2;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		FFF399592F6745B900E8BA4D /* Frameworks */ = {
@@ -52,6 +74,28 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		FFF3995E2F6745B900E8BA4D /* DrawOnGMaps2 */ = {
+			isa = PBXGroup;
+			children = (
+				FF01000F000000000000000F /* Assets.xcassets */,
+				FF0100010000000000000001 /* AgentDebugLogger.swift */,
+				FF0100020000000000000002 /* ContentView.swift */,
+				FF0100030000000000000003 /* DebounceHelpers.swift */,
+				FF0100040000000000000004 /* DrawOnGMaps2App.swift */,
+				FF0100050000000000000005 /* DrawingOverlayView.swift */,
+				FF0100060000000000000006 /* LocationManager.swift */,
+				FF0100070000000000000007 /* MapBridge.swift */,
+				FF0100080000000000000008 /* MapContainerView.swift */,
+				FF0100090000000000000009 /* MapControlsView.swift */,
+				FF01000A000000000000000A /* PegmanView.swift */,
+				FF01000B000000000000000B /* StreetViewBridge.swift */,
+				FF01000C000000000000000C /* StreetViewContainer.swift */,
+				FF01000D000000000000000D /* StreetViewControlsView.swift */,
+				FF01000E000000000000000E /* StreetViewZoomController.swift */,
+			);
+			path = DrawOnGMaps2;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -66,9 +110,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				FFF3995E2F6745B900E8BA4D /* DrawOnGMaps2 */,
 			);
 			name = DrawOnGMaps2;
 			packageProductDependencies = (
@@ -85,15 +126,16 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2630;
-				LastUpgradeCheck = 2630;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
 				TargetAttributes = {
 					FFF3995B2F6745B900E8BA4D = {
-						CreatedOnToolsVersion = 26.3;
+						CreatedOnToolsVersion = 15.4;
 					};
 				};
 			};
 			buildConfigurationList = FFF399572F6745B900E8BA4D /* Build configuration list for PBXProject "DrawOnGMaps2" */;
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -101,11 +143,9 @@
 				Base,
 			);
 			mainGroup = FFF399532F6745B900E8BA4D;
-			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				FF30EE2B2F67615E00D71528 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */,
 			);
-			preferredProjectObjectVersion = 77;
 			productRefGroup = FFF3995D2F6745B900E8BA4D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -120,6 +160,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FF010101000000000000000F /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +171,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FF0101010000000000000004 /* DrawOnGMaps2App.swift in Sources */,
+				FF0101010000000000000002 /* ContentView.swift in Sources */,
+				FF0101010000000000000001 /* AgentDebugLogger.swift in Sources */,
+				FF0101010000000000000003 /* DebounceHelpers.swift in Sources */,
+				FF0101010000000000000005 /* DrawingOverlayView.swift in Sources */,
+				FF0101010000000000000006 /* LocationManager.swift in Sources */,
+				FF0101010000000000000007 /* MapBridge.swift in Sources */,
+				FF0101010000000000000008 /* MapContainerView.swift in Sources */,
+				FF0101010000000000000009 /* MapControlsView.swift in Sources */,
+				FF010101000000000000000A /* PegmanView.swift in Sources */,
+				FF010101000000000000000B /* StreetViewBridge.swift in Sources */,
+				FF010101000000000000000C /* StreetViewContainer.swift in Sources */,
+				FF010101000000000000000D /* StreetViewControlsView.swift in Sources */,
+				FF010101000000000000000E /* StreetViewZoomController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -173,8 +228,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -188,8 +242,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -236,8 +289,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -245,12 +297,12 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
