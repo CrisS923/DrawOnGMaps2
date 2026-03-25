@@ -3,31 +3,60 @@ import Foundation
 import GoogleMaps
 
 private enum ApiKeyProvider {
-    static var googleMaps: String {
-        if let key = Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String, key.isEmpty == false {
+    /// Returns the configured Google Maps key, or nil if none is set.
+    static func googleMaps() -> String? {
+        // Prefer the key baked into the app's Info.plist (set via Secrets.xcconfig).
+        if let key = sanitize(Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String) {
             return key
         }
 
-        if let key = ProcessInfo.processInfo.environment["GOOGLE_MAPS_API_KEY"], key.isEmpty == false {
+        // In DEBUG only, fall back to an env var injected by Xcode when running tethered.
+        #if DEBUG
+        if let key = sanitize(ProcessInfo.processInfo.environment["GOOGLE_MAPS_API_KEY"]) {
             return key
         }
+        #endif
 
-        fatalError("Google Maps API key not set. Provide GMSApiKey in Info.plist or GOOGLE_MAPS_API_KEY at build time.")
+        return nil
+    }
+
+    /// Treat placeholders or empty strings as missing so release builds can't silently ship without a real key.
+    private static func sanitize(_ raw: String?) -> String? {
+        guard let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines), trimmed.isEmpty == false else {
+            return nil
+        }
+        // Reject common placeholder values that sneak into Info.plist when the build setting isn't provided.
+        if trimmed.contains("$(") || trimmed.caseInsensitiveCompare("REPLACE_ME") == .orderedSame {
+            return nil
+        }
+        return trimmed
     }
 }
 
 @main
 struct DrawOnGMaps2App: App {
+    @State private var showMissingKeyAlert: Bool
+    private let missingApiKeyMessage: String?
 
     init() {
-        GMSServices.provideAPIKey(ApiKeyProvider.googleMaps)
+        let key = ApiKeyProvider.googleMaps()
+
+        if let key, !key.isEmpty {
+            let provided = GMSServices.provideAPIKey(key)
+            missingApiKeyMessage = provided ? nil : "Google Maps key was present but rejected. Double-check the value and any key restrictions."
+        } else {
+            missingApiKeyMessage = "Google Maps API key not set. Add it to Config/Secrets.xcconfig or the scheme environment, then rebuild and reinstall."
+        }
+
+        _showMissingKeyAlert = State(initialValue: missingApiKeyMessage != nil)
+
         // #region agent log
         AgentDebugLogger.log(
             runId: "initial",
             hypothesisId: "H6",
             location: "DrawOnGMaps2App.swift:init",
-            message: "App init executed",
-            data: [:]
+            message: missingApiKeyMessage == nil ? "App init executed" : "App init missing API key",
+            data: ["missingApiKey": missingApiKeyMessage ?? "none"]
         )
         // #endregion
     }
@@ -35,6 +64,11 @@ struct DrawOnGMaps2App: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .alert("Google Maps API Key Missing", isPresented: $showMissingKeyAlert) {
+                    Button("OK", role: .cancel) {}
+                } message: {
+                    Text(missingApiKeyMessage ?? "")
+                }
         }
     }
 }
