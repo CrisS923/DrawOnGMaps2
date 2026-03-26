@@ -3,6 +3,10 @@ import Foundation
 import GoogleMaps
 
 private enum ApiKeyProvider {
+    /// Compile-time fallback so release builds still have a key even if Info.plist substitution failed.
+    /// NOTE: Keep in sync with Config/Secrets.xcconfig.
+    private static let bundledDefaultKey = "REDACTED_API_KEY"
+
     /// Returns the configured Google Maps key, or nil if none is set.
     static func googleMaps() -> String? {
         // Prefer the key baked into the app's Info.plist (set via Secrets.xcconfig).
@@ -17,7 +21,8 @@ private enum ApiKeyProvider {
         }
         #endif
 
-        return nil
+        // Final fallback for standalone installs.
+        return sanitize(bundledDefaultKey)
     }
 
     /// Treat placeholders or empty strings as missing so release builds can't silently ship without a real key.
