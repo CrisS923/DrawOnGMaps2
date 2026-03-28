@@ -16,6 +16,7 @@ struct DrawingOverlayView: View {
     @Binding var isDrawing: Bool
     @Binding var paths: [ColoredPath]
     let strokeColor: Color
+    let strokeWidth: CGFloat
 
     @State private var current = Path()
 
@@ -23,10 +24,9 @@ struct DrawingOverlayView: View {
         GeometryReader { _ in
             ZStack {
                 ForEach(paths.indices, id: \.self) { idx in
-                    paths[idx].path.stroke(paths[idx].color, lineWidth: 4)
-                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                    paths[idx].path.stroke(paths[idx].color, lineWidth: strokeWidth)
                 }
-                current.stroke(strokeColor, lineWidth: 4)
+                current.stroke(strokeColor, lineWidth: strokeWidth)
                     .opacity(isDrawing ? 1 : 0)
             }
             .contentShape(Rectangle())
@@ -46,6 +46,7 @@ struct DrawingOverlayView: View {
                 guard isDrawing else { return }
                 paths.append(ColoredPath(path: current, color: strokeColor))
                 current = Path()
+                isDrawing = false
             }
     }
 }
@@ -55,6 +56,7 @@ struct MapDrawingOverlayView: View {
     @Binding var isDrawing: Bool
     @Binding var paths: [GeoColoredPath]
     let strokeColor: Color
+    let strokeWidth: CGFloat
     @ObservedObject var bridge: MapBridge
     @Binding var centerCoordinate: CLLocationCoordinate2D
     @Binding var currentZoom: Float
@@ -69,12 +71,11 @@ struct MapDrawingOverlayView: View {
             ZStack {
                 ForEach(paths.indices, id: \.self) { idx in
                     path(for: paths[idx].coords, overlayOrigin: overlayOrigin)
-                        .stroke(paths[idx].color, lineWidth: 4)
-                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                        .stroke(paths[idx].color, lineWidth: strokeWidth)
                 }
                 if !currentCoords.isEmpty {
                     path(for: currentCoords, overlayOrigin: overlayOrigin)
-                        .stroke(strokeColor, lineWidth: 4)
+                        .stroke(strokeColor, lineWidth: strokeWidth)
                         .opacity(isDrawing ? 1 : 0)
                 }
             }
@@ -87,8 +88,13 @@ struct MapDrawingOverlayView: View {
                         let mapOriginGlobal = mapView.convert(CGPoint.zero, to: nil)
                         let pointInMap = CGPoint(x: value.location.x - mapOriginGlobal.x,
                                                  y: value.location.y - mapOriginGlobal.y)
-                        let coord = mapView.projection.coordinate(for: pointInMap)
-                        currentCoords.append(coord)
+                let coord = mapView.projection.coordinate(for: pointInMap)
+                if let last = currentCoords.last {
+                    let dx = coord.latitude - last.latitude
+                    let dy = coord.longitude - last.longitude
+                    if (dx*dx + dy*dy) < 1e-10 { return } // skip very close points
+                }
+                currentCoords.append(coord)
                     }
                     .onEnded { _ in
                         guard isDrawing, !currentCoords.isEmpty else { return }

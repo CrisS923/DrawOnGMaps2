@@ -59,8 +59,8 @@ struct ContentView: View {
 
     /// Bridge exposing the underlying GMSMapView.
     @StateObject private var bridge = MapBridge()
-    /// Bridge exposing the underlying GMSPanoramaView.
-    @StateObject private var streetBridge = StreetViewBridge()
+    /// Bridge exposing the underlying GMSPanoramaView (lazy created).
+    @State private var streetBridge: StreetViewBridge?
     /// Observable location manager helper.
     @StateObject private var locationManager = LocationManager()
     
@@ -79,6 +79,7 @@ struct ContentView: View {
     /// Completed user-drawn paths on Street View.
     @State private var streetPaths: [ColoredPath] = []
     @State private var drawColor: Color = .yellow
+    @State private var strokeWidth: CGFloat = 6
     /// If true, drawings remain visible while moving.
     @State private var drawingsLocked = true
     @State private var awaitingLocateMe = false
@@ -93,37 +94,46 @@ struct ContentView: View {
     @State private var showSuggestions = false
     /// Autocomplete model
     @StateObject private var searchModel = AddressSearchModel()
-    @StateObject private var previewBridge = StreetViewBridge()
+    @State private var previewBridge: StreetViewBridge?
     @State private var previewCoordinate: CLLocationCoordinate2D?
     @State private var showStreetPreview = false
     @State private var suppressSuggestions = false
     @State private var isSearchSheet = false
     @State private var searchFieldFirstResponder = false
-    /// Arms a single-tap Street View pick on the map.
-    @State private var isPickingStreet = false
     /// Ensures we only auto-center to user once on launch.
     @State private var hasCenteredOnUser = false
     /// Toast message for errors like no Street View coverage.
     @State private var toastMessage: String?
     /// Panorama lookup service.
     private let panoService = GMSPanoramaService()
+    private let searchDebouncer = Debouncer(delay: 0.25)
 
     /// Main screen content that switches between Map and Street View.
     var body: some View {
         ZStack {
             if isInStreetView {
-                // Full-screen Street View
-                StreetViewContainer(coordinate: streetViewCoordinate, bridge: streetBridge)
-                    .ignoresSafeArea()
+                // Full-screen Street View (lazy bridge)
+                if let streetBridge {
+                    StreetViewContainer(coordinate: streetViewCoordinate, bridge: streetBridge)
+                        .ignoresSafeArea()
+                } else {
+                    Color.black.opacity(0.2).ignoresSafeArea()
+                        .onAppear {
+                            if streetBridge == nil {
+                                streetBridge = StreetViewBridge()
+                            }
+                        }
+                }
                 
                 if drawingsLocked || isDrawingOnStreet {
-                    DrawingOverlayView(isDrawing: $isDrawingOnStreet, paths: $streetPaths, strokeColor: drawColor)
+                    DrawingOverlayView(isDrawing: $isDrawingOnStreet, paths: $streetPaths, strokeColor: drawColor, strokeWidth: strokeWidth)
                         .ignoresSafeArea()
                 }
 
                 // Street overlays (match map minimal UI)
                 FloatingPenMenu(isDrawing: $isDrawingOnStreet,
                                 selectedColor: $drawColor,
+                                selectedWidth: $strokeWidth,
                                 onClear: { streetPaths.removeAll() },
                                 onUndo: { _ = streetPaths.popLast() })
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
@@ -160,23 +170,12 @@ struct ContentView: View {
                                  currentZoom: $mapZoom,
                                  bridge: bridge)
                     .ignoresSafeArea()
-                    .overlay(
-                        Group {
-                            if isPickingStreet {
-                                TapCaptureView { point in
-                                    if let mapView = bridge.mapView {
-                                        let coord = mapView.projection.coordinate(for: point)
-                                        handleMapTap(coord)
-                                    }
-                                }
-                            }
-                        }
-                    )
                 
                 if drawingsLocked || isDrawingOnMap {
                     MapDrawingOverlayView(isDrawing: $isDrawingOnMap,
                                           paths: $mapPaths,
                                           strokeColor: drawColor,
+                                          strokeWidth: strokeWidth,
                                           bridge: bridge,
                                           centerCoordinate: $mapCenter,
                                           currentZoom: $mapZoom)
@@ -185,12 +184,14 @@ struct ContentView: View {
 
                 MapPolylineDrawingOverlay(isDrawing: $isPolylineDrawing,
                                           selectedColor: $drawColor,
+                                          selectedWidth: $strokeWidth,
                                           bridge: bridge,
                                           store: polylineStore)
                     .ignoresSafeArea()
                 
                 FloatingPenMenu(isDrawing: $isPolylineDrawing,
                                 selectedColor: $drawColor,
+                                selectedWidth: $strokeWidth,
                                 onClear: { polylineStore.clear() },
                                 onUndo: { polylineStore.undo() })
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
@@ -216,15 +217,18 @@ struct ContentView: View {
                     .padding(.trailing, 12)
                     .padding(.top, 12)
 
-                // Tap-to-pick Street View icon above locate (bottom-right)
-                StreetViewPickButton(isActive: isPickingStreet) {
-                    isPickingStreet = true
+                // Tap-to-arm then drag Pegman (bottom-right)
+                PegmanDragButton { globalPoint in
+                    guard let mapView = bridge.mapView else { return }
+                    let dropPointInMap = mapView.convert(globalPoint, from: nil)
+                    let coord = mapView.projection.coordinate(for: dropPointInMap)
+                    handleMapTap(coord)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                 .padding(.trailing, 12)
                 .padding(.bottom, 90)
                 
-                if let previewCoord = previewCoordinate, showStreetPreview {
+                if let previewCoord = previewCoordinate, showStreetPreview, let previewBridge {
                     VStack(spacing: 6) {
                         HStack {
                             Text("Street Preview")
@@ -262,7 +266,7 @@ struct ContentView: View {
                     .padding(10)
                     .background(.ultraThinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(radius: 6)
+                    .shadow(radius: 2, y: 1)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                     .padding(.trailing, 16)
                     .padding(.bottom, 100)
@@ -349,14 +353,20 @@ struct ContentView: View {
         .onReceive(Just(searchQuery)) { newValue in
             let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
             showSuggestions = !trimmed.isEmpty && !suppressSuggestions
-            searchModel.update(query: trimmed)
+            searchDebouncer.schedule {
+                searchModel.update(query: trimmed)
+            }
         }
         .onReceive(bridge.$mapView.compactMap { $0 }) { mapView in
             let disable = isDrawingOnMap || isPolylineDrawing
             mapView.settings.scrollGestures = !disable
             mapView.settings.zoomGestures = !disable
-            mapView.settings.rotateGestures = !disable
-            mapView.settings.tiltGestures = !disable
+            if mapView.settings.rotateGestures != !disable {
+                mapView.settings.rotateGestures = !disable
+            }
+            if mapView.settings.tiltGestures != !disable {
+                mapView.settings.tiltGestures = !disable
+            }
         }
         .onChange(of: isStreetAngleView) { _, _ in
             applyStreetAnglePitch()
@@ -405,7 +415,7 @@ struct ContentView: View {
                     ScrollView {
                         VStack(spacing: 0) {
                             SearchSuggestionsList(
-                                suggestions: searchModel.completions.prefix(6).map { $0 },
+                                suggestions: searchModel.completions.prefix(5).map { $0 },
                                 onSelect: { completion in
                                     selectCompletion(completion, forStreetView: isInStreetView)
                                     isSearchSheet = false
@@ -414,13 +424,13 @@ struct ContentView: View {
                         }
                         .padding(.horizontal, 8)
                     }
-                    .frame(maxHeight: 260)
+                    .frame(maxHeight: 210)
                 } else {
                     Spacer(minLength: 0)
                 }
             }
             .padding(.bottom, 12)
-            .presentationDetents([.fraction(0.4)])
+            .presentationDetents([.fraction(0.35)])
             .presentationDragIndicator(.visible)
             .onAppear {
                 DispatchQueue.main.async {
@@ -537,13 +547,13 @@ struct ContentView: View {
         guard let mapView = bridge.mapView else { return }
         let targetAngle: Double = isAngledView ? 60 : 0
         let current = mapView.camera
-        let update = GMSCameraUpdate.setCamera(
-            GMSCameraPosition.camera(withTarget: current.target,
-                                     zoom: current.zoom,
-                                     bearing: current.bearing,
-                                     viewingAngle: targetAngle)
-        )
-        mapView.animate(with: update)
+        let newCam = GMSCameraPosition.camera(withTarget: current.target,
+                                              zoom: current.zoom,
+                                              bearing: current.bearing,
+                                              viewingAngle: targetAngle)
+        if abs(current.viewingAngle - targetAngle) > 0.1 {
+            mapView.animate(to: newCam)
+        }
         mapView.settings.tiltGestures = true
         mapView.setMinZoom(2, maxZoom: 21)
         mapView.isBuildingsEnabled = true
@@ -567,7 +577,7 @@ struct ContentView: View {
     }
     
     private func applyStreetAnglePitch() {
-        guard let pano = streetBridge.panoramaView else { return }
+        guard let pano = streetBridge?.panoramaView else { return }
         let current = pano.camera
         let targetPitch: Double = isStreetAngleView ? -70 : 0
         let newCam = GMSPanoramaCamera(heading: current.orientation.heading,
@@ -651,8 +661,6 @@ struct ContentView: View {
     }
 
     private func handleMapTap(_ coord: CLLocationCoordinate2D) {
-        guard isPickingStreet else { return }
-        isPickingStreet = false
         panoService.requestPanoramaNearCoordinate(coord, radius: 150) { panorama, _ in
             DispatchQueue.main.async {
                 if panorama != nil {
@@ -719,46 +727,14 @@ private struct AngleIconButton: View {
             Image(systemName: "view.3d")
                 .font(.title2)
                 .foregroundStyle(.primary)
-                .padding(14)
-                .background(.ultraThinMaterial)
-                .clipShape(Circle())
-                .overlay(
-                    Circle().stroke(isAngled ? Color.blue : Color.clear, lineWidth: 2)
-                )
-                .shadow(radius: 4, y: 1)
+                    .padding(14)
+                    .background(Color.black.opacity(0.1))
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle().stroke(isAngled ? Color.blue : Color.clear, lineWidth: 2)
+                    )
+                    .shadow(radius: 1, y: 0.5)
         }
-    }
-}
-
-private struct StreetViewIconButton: View {
-    var action: () -> Void
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: "figure.walk.circle.fill")
-                .font(.title2)
-                .foregroundStyle(Color.blue)
-                .padding(14)
-                .background(.ultraThinMaterial)
-                .clipShape(Circle())
-                .shadow(radius: 4, y: 1)
-        }
-    }
-}
-
-private struct StreetViewPickButton: View {
-    var isActive: Bool
-    var action: () -> Void
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: "figure.walk.circle.fill")
-                .font(.title2)
-                .foregroundStyle(.white)
-                .padding(14)
-                .background(isActive ? Color.blue : Color.gray.opacity(0.5))
-                .clipShape(Circle())
-                .shadow(radius: 4, y: 1)
-        }
-        .accessibilityLabel("Pick Street View location")
     }
 }
 
@@ -772,8 +748,35 @@ private struct MapExitButton: View {
                 .padding(14)
                 .background(Color.blue)
                 .clipShape(Circle())
-                .shadow(radius: 4, y: 1)
+                .shadow(radius: 2, y: 1)
         }
         .accessibilityLabel("Back to map")
+    }
+}
+
+private struct PegmanDragButton: View {
+    var onDrop: (CGPoint) -> Void
+    @State private var dragOffset: CGSize = .zero
+    
+    var body: some View {
+        let drag = DragGesture(minimumDistance: 0, coordinateSpace: .global)
+            .onChanged { value in
+                dragOffset = value.translation
+            }
+            .onEnded { value in
+                dragOffset = .zero
+                onDrop(value.location)
+            }
+        
+        Image(systemName: "figure.walk.circle.fill")
+            .font(.title2)
+            .foregroundStyle(.white)
+            .padding(14)
+            .background(Color.blue.opacity(0.78))
+            .clipShape(Circle())
+            .shadow(radius: 1, y: 0.5)
+            .offset(dragOffset)
+            .gesture(drag)
+            .accessibilityLabel("Drag to enter Street View")
     }
 }

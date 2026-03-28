@@ -13,6 +13,7 @@ import UIKit
 struct MapPolylineDrawingOverlay: View {
     @Binding var isDrawing: Bool
     @Binding var selectedColor: Color
+    @Binding var selectedWidth: CGFloat
     @ObservedObject var bridge: MapBridge
     @ObservedObject var store: PolylineStore
     
@@ -34,6 +35,11 @@ struct MapPolylineDrawingOverlay: View {
                             let pointInMap = CGPoint(x: value.location.x - mapOriginGlobal.x,
                                                      y: value.location.y - mapOriginGlobal.y)
                             let coord = mapView.projection.coordinate(for: pointInMap)
+                            if let last = currentCoords.last {
+                                let dx = coord.latitude - last.latitude
+                                let dy = coord.longitude - last.longitude
+                                if (dx*dx + dy*dy) < 1e-10 { return }
+                            }
                             currentCoords.append(coord)
                             
                             if currentCoords.count == 1 {
@@ -41,7 +47,7 @@ struct MapPolylineDrawingOverlay: View {
                                 currentPath = GMSMutablePath()
                                 currentPath.add(coord)
                                 let polyline = GMSPolyline(path: currentPath)
-                                polyline.strokeWidth = 4
+                                polyline.strokeWidth = selectedWidth
                                 polyline.strokeColor = UIColor(selectedColor)
                                 polyline.map = mapView
                                 currentPolyline = polyline
@@ -58,6 +64,7 @@ struct MapPolylineDrawingOverlay: View {
                             if let polyline = currentPolyline {
                                 store.add(polyline)
                             }
+                            isDrawing = false
                             resetCurrent()
                         }
                 )
