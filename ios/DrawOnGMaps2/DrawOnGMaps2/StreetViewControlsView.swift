@@ -110,10 +110,12 @@ struct StreetViewControlsView: View {
                     
                     Spacer(minLength: 0)
                     
-                    Toggle("Lock Drawings", isOn: $drawingsLocked)
-                        .toggleStyle(SwitchToggleStyle(tint: .blue))
-                        .labelsHidden()
-                        .frame(maxWidth: 140, alignment: .trailing)
+                    Toggle(isOn: $drawingsLocked) {
+                        Label("Lock drawings", systemImage: drawingsLocked ? "lock.fill" : "lock.open")
+                            .labelStyle(.titleAndIcon)
+                    }
+                    .toggleStyle(SwitchToggleStyle(tint: .blue))
+                    .frame(maxWidth: 180, alignment: .trailing)
                 }
                 .padding(12)
                 .background(.ultraThinMaterial)
