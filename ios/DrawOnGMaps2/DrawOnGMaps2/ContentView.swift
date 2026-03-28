@@ -69,8 +69,8 @@ struct ContentView: View {
     
     /// Drawing state for the map overlay.
     @State private var isDrawingOnMap = false
-    /// Completed user-drawn paths on the map.
-    @State private var mapPaths: [ColoredPath] = []
+    /// Completed user-drawn paths on the map (anchored to map coordinates).
+    @State private var mapPaths: [GeoColoredPath] = []
     /// Drawing state for the Street View overlay.
     @State private var isDrawingOnStreet = false
     /// Completed user-drawn paths on Street View.
@@ -127,7 +127,8 @@ struct ContentView: View {
                     onToggleStreetAngle: { toggleStreetAngleView() },
                     onSearchAddress: { searchAddress(forStreetView: true) },
                     onSelectSuggestion: { selectCompletion($0, forStreetView: true) },
-                    onClearStreetDrawings: { streetPaths.removeAll() }
+                    onClearStreetDrawings: { streetPaths.removeAll() },
+                    onUndoLastDrawing: { _ = streetPaths.popLast() }
                 )
             } else {
                 // Full-screen Map
@@ -137,7 +138,12 @@ struct ContentView: View {
                     .ignoresSafeArea()
                 
                 if drawingsLocked || isDrawingOnMap {
-                    DrawingOverlayView(isDrawing: $isDrawingOnMap, paths: $mapPaths, strokeColor: drawColor)
+                    MapDrawingOverlayView(isDrawing: $isDrawingOnMap,
+                                          paths: $mapPaths,
+                                          strokeColor: drawColor,
+                                          mapView: bridge.mapView,
+                                          centerCoordinate: $mapCenter,
+                                          currentZoom: $mapZoom)
                         .ignoresSafeArea()
                 }
 
@@ -154,6 +160,7 @@ struct ContentView: View {
                     onSearchAddress: { searchAddress(forStreetView: false) },
                     onSelectSuggestion: { selectCompletion($0, forStreetView: false) },
                     onClearMapDrawings: { mapPaths.removeAll() },
+                    onUndoLastDrawing: { _ = mapPaths.popLast() },
                     onTogglePegman: { withAnimation { showPegman.toggle() } },
                     onToggleAngle: { toggleAngleView() }
                 )

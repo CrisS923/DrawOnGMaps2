@@ -26,6 +26,7 @@ struct MapControlsView: View {
     var onSearchAddress: () -> Void
     var onSelectSuggestion: (MKLocalSearchCompletion) -> Void
     var onClearMapDrawings: () -> Void
+    var onUndoLastDrawing: () -> Void
     var onTogglePegman: () -> Void
     var onToggleAngle: () -> Void
 
@@ -104,6 +105,11 @@ struct MapControlsView: View {
                         isDrawingOnMap.toggle()
                     } label: {
                         Label("Draw", systemImage: isDrawingOnMap ? "pencil.slash" : "pencil")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button(action: onUndoLastDrawing) {
+                        Label("Undo", systemImage: "arrow.uturn.backward")
                     }
                     .buttonStyle(.bordered)
 

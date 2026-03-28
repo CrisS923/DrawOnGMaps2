@@ -28,6 +28,7 @@ struct StreetViewControlsView: View {
     var onSearchAddress: () -> Void
     var onSelectSuggestion: (MKLocalSearchCompletion) -> Void
     var onClearStreetDrawings: () -> Void
+    var onUndoLastDrawing: () -> Void
     
     var body: some View {
         
@@ -86,6 +87,11 @@ struct StreetViewControlsView: View {
                         isDrawingOnStreet.toggle()
                     } label: {
                         Label("Draw", systemImage: isDrawingOnStreet ? "pencil.slash" : "pencil")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button(action: onUndoLastDrawing) {
+                        Label("Undo", systemImage: "arrow.uturn.backward")
                     }
                     .buttonStyle(.bordered)
                     

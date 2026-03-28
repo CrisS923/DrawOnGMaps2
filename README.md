@@ -14,6 +14,8 @@ Features
 - **Google Maps (satellite)** with pan/zoom, angle toggle, traffic/buildings enabled, and a “Locate Me” shortcut.
 - **Street View**: open via Pegman drag-and-drop from the map or from search results; custom pinch-to-zoom and optional pitched “angle” view.
 - **Drawing overlays** on both map and Street View with lock/unlock, clear, and color picker (yellow/blue/black/red/silver).
+- **Undo last stroke** in both map and Street View modes.
+- **Map drawings stay pinned** to the map even while zooming/panning when drawings are shown (toggle “Lock drawings” to keep them visible).
 - **Search with autocomplete** (Apple MKLocalSearch): suggestions dropdown, open results on the map or directly in Street View, plus small Street View preview card.
 - **Pegman overlay**: draggable entry to Street View at any map point; hides after drop.
 - **Stateful controls**: toggle angled map view, toggle drawings, lock drawings, clear drawings.
