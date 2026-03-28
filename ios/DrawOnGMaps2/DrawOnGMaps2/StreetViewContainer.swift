@@ -24,7 +24,12 @@ struct StreetViewContainer: UIViewRepresentable {
     func makeUIView(context: Context) -> GMSPanoramaView {
         let pano = GMSPanoramaView(frame: .zero)
         pano.navigationGestures = true
-        bridge.panoramaView = pano
+        // Defer publishing to avoid “Publishing changes from within view updates”
+        DispatchQueue.main.async { [weak bridge] in
+            if bridge?.panoramaView !== pano {
+                bridge?.panoramaView = pano
+            }
+        }
         context.coordinator.lastCoordinate = coordinate
         context.coordinator.panoramaView = pano
         

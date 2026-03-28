@@ -12,5 +12,6 @@ import Combine
 
 // MARK: - Bridge to expose GMSMapView
 final class MapBridge: ObservableObject {
-    weak var mapView: GMSMapView?
+    // Publish the map view so SwiftUI overlays re-render once it exists.
+    @Published var mapView: GMSMapView?
 }

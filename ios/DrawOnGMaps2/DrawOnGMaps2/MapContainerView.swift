@@ -17,6 +17,7 @@ struct MapContainerView: UIViewRepresentable {
     @Binding var centerCoordinate: CLLocationCoordinate2D
     @Binding var currentZoom: Float
     @ObservedObject var bridge: MapBridge
+    var onMapTap: ((CLLocationCoordinate2D) -> Void)? = nil
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -47,7 +48,13 @@ struct MapContainerView: UIViewRepresentable {
         mapView.settings.myLocationButton = true
         
         context.coordinator.mapView = mapView
-        bridge.mapView = mapView
+        // Defer publishing bridge.mapView to avoid "Publishing changes from within view updates" during makeUIView/updateUIView
+        DispatchQueue.main.async { [weak bridge] in
+            // Only set once if not already set to this instance
+            if bridge?.mapView !== mapView {
+                bridge?.mapView = mapView
+            }
+        }
         return mapView
     }
 
@@ -80,6 +87,21 @@ struct MapContainerView: UIViewRepresentable {
             isUserGesture = false
             parent.centerCoordinate = position.target
             parent.currentZoom = position.zoom
+        }
+        
+        // Handle built-in "locate me" button to recentre map on user location.
+        func mapView(_ mapView: GMSMapView, didTapMyLocationButtonFor locationButton: UIView) -> Bool {
+            guard let location = mapView.myLocation else { return true }
+            let targetZoom = max(parent.currentZoom, 16)
+            let camera = GMSCameraPosition.camera(withTarget: location.coordinate, zoom: targetZoom)
+            mapView.animate(to: camera)
+            parent.centerCoordinate = location.coordinate
+            parent.currentZoom = targetZoom
+            return true // consume default behavior
+        }
+
+        func mapView(_ mapView: GMSMapView, didTapAt coordinate: CLLocationCoordinate2D) {
+            parent.onMapTap?(coordinate)
         }
     }
 }

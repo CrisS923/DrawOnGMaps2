@@ -20,6 +20,7 @@ struct StreetViewControlsView: View {
     @Binding var searchText: String
     @Binding var showSuggestions: Bool
     var suggestions: [MKLocalSearchCompletion]
+    @State private var isSearchSheet = false
     
     // Actions
     var onBackToMap: () -> Void
@@ -46,38 +47,23 @@ struct StreetViewControlsView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     
-                    Button(action: onToggleStreetAngle) {
-                        Label(isStreetAngleView ? "Driver View" : "Angle View", systemImage: "view.3d")
-                    }
-                    .buttonStyle(.bordered)
-                    
-                    Spacer(minLength: 0)
-                    
-                    HStack(spacing: 8) {
-                        TextField("Search address", text: $searchText)
-                            .textFieldStyle(.roundedBorder)
-                            .submitLabel(.search)
-                            .onSubmit(onSearchAddress)
-                            .textInputAutocapitalization(.never)
-                            .disableAutocorrection(true)
-                            .frame(maxWidth: 420)
-                        
-                        Button(action: onSearchAddress) {
-                            Label("Search", systemImage: "magnifyingglass")
-                        }
-                        .buttonStyle(.borderedProminent)
-                        Spacer(minLength: 0)
-                    }
-                    
-                    if showSuggestions, !suggestions.isEmpty {
-                        SearchSuggestionsList(suggestions: suggestions, onSelect: onSelectSuggestion)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
+                Button(action: onToggleStreetAngle) {
+                    Label(isStreetAngleView ? "Driver View" : "Angle View", systemImage: "view.3d")
                 }
-                .padding(12)
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .padding([.top, .horizontal], 16)
+                .buttonStyle(.bordered)
+                
+                Spacer(minLength: 0)
+                
+                Button(action: { isSearchSheet = true }) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.title2)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .padding(12)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding([.top, .horizontal], 16)
                 
                 Spacer()
                 
@@ -129,6 +115,47 @@ struct StreetViewControlsView: View {
                 .padding([.horizontal, .bottom], 16)
             }
             .frame (maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .sheet(isPresented: $isSearchSheet, onDismiss: { showSuggestions = false }) {
+            NavigationView {
+                VStack(alignment: .leading, spacing: 12) {
+                    TextField("Search address", text: $searchText)
+                        .textFieldStyle(.roundedBorder)
+                        .submitLabel(.search)
+                        .onSubmit {
+                            onSearchAddress()
+                            isSearchSheet = false
+                        }
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                        .padding(.top, 6)
+                    
+                    if showSuggestions, !suggestions.isEmpty {
+                        SearchSuggestionsList(suggestions: suggestions) { completion in
+                            onSelectSuggestion(completion)
+                            isSearchSheet = false
+                        }
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                    
+                    Spacer()
+                }
+                .padding()
+                .navigationTitle("Search")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close") { isSearchSheet = false }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Search") {
+                            onSearchAddress()
+                            isSearchSheet = false
+                        }
+                    }
+                }
+                .onAppear { showSuggestions = true }
+            }
+            .presentationDetents([.medium])
         }
     }
 }

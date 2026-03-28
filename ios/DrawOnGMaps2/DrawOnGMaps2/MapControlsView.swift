@@ -21,6 +21,8 @@ struct MapControlsView: View {
     @Binding var searchText: String
     @Binding var showSuggestions: Bool
     var suggestions: [MKLocalSearchCompletion]
+    var showBottomBar: Bool = true
+    @State private var isSearchSheet = false
 
     // Actions
     var onSearchAddress: () -> Void
@@ -33,25 +35,16 @@ struct MapControlsView: View {
     var body: some View {
         GeometryReader { rootProxy in
             VStack(spacing: 0) {
-                // Top banner with search
+                // Top banner with compact search trigger
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 12) {
                         Spacer(minLength: 0)
 
-                        HStack(spacing: 8) {
-                            TextField("Search address", text: $searchText)
-                                .textFieldStyle(.roundedBorder)
-                                .submitLabel(.search)
-                                .onSubmit(onSearchAddress)
-                                .textInputAutocapitalization(.never)
-                                .disableAutocorrection(true)
-                                .frame(maxWidth: 420)
-
-                            Button(action: onSearchAddress) {
-                                Label("Search", systemImage: "magnifyingglass")
-                            }
-                            .buttonStyle(.borderedProminent)
+                        Button(action: { isSearchSheet = true }) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.title2)
                         }
+                        .buttonStyle(.borderedProminent)
 
                         Spacer(minLength: 0)
 
@@ -64,11 +57,6 @@ struct MapControlsView: View {
                             Label(isAngledView ? "Flat View" : "Angle View", systemImage: "view.3d")
                         }
                         .buttonStyle(.bordered)
-                    }
-
-                    if showSuggestions, !suggestions.isEmpty {
-                        SearchSuggestionsList(suggestions: suggestions, onSelect: onSelectSuggestion)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
                 .padding(12)
@@ -100,72 +88,74 @@ struct MapControlsView: View {
                 Spacer(minLength: 0)
 
                 // Bottom banner
-                HStack(spacing: 10) {
-                    Button {
-                        isDrawingOnMap.toggle()
-                    } label: {
-                        Label("Draw", systemImage: isDrawingOnMap ? "pencil.slash" : "pencil")
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button(action: onUndoLastDrawing) {
-                        Label("Undo", systemImage: "arrow.uturn.backward")
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button(action: onClearMapDrawings) {
-                        Label("Clear", systemImage: "trash")
-                    }
-                    .buttonStyle(.bordered)
-
-                    Menu {
-                        ForEach(colorChoices, id: \.self) { color in
-                            Button {
-                                selectedColor = color
-                            } label: {
-                                Label(colorName(color), systemImage: "circle.fill")
-                                    .symbolRenderingMode(.palette)
-                                    .foregroundStyle(color)
-                            }
+                if showBottomBar {
+                    HStack(spacing: 10) {
+                        Button {
+                            isDrawingOnMap.toggle()
+                        } label: {
+                            Label("Draw", systemImage: isDrawingOnMap ? "pencil.slash" : "pencil")
                         }
-                    } label: {
-                        Label("Color", systemImage: "paintpalette.fill")
-                    }
+                        .buttonStyle(.bordered)
 
-                    Spacer(minLength: 0)
+                        Button(action: onUndoLastDrawing) {
+                            Label("Undo", systemImage: "arrow.uturn.backward")
+                        }
+                        .buttonStyle(.bordered)
 
-                    Toggle(isOn: $drawingsLocked) {
-                        Label("Lock drawings", systemImage: drawingsLocked ? "lock.fill" : "lock.open")
-                            .labelStyle(.titleAndIcon)
-                    }
-                    .toggleStyle(SwitchToggleStyle(tint: .blue))
-                    .frame(maxWidth: 180, alignment: .trailing)
-                }
-                .padding(12)
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .padding([.horizontal, .bottom], 16)
-                .frame(maxWidth: .infinity, alignment: .bottom)
-                .background(
-                    GeometryReader { bannerProxy in
-                        Color.clear
-                            .onAppear {
-                                // #region agent log
-                                AgentDebugLogger.log(
-                                    runId: "initial",
-                                    hypothesisId: "H4",
-                                    location: "MapControlsView.swift:bottomBanner",
-                                    message: "Bottom banner rendered",
-                                    data: [
-                                        "minY": bannerProxy.frame(in: .global).minY,
-                                        "maxY": bannerProxy.frame(in: .global).maxY,
-                                        "rootHeight": rootProxy.size.height
-                                    ]
-                                )
-                                // #endregion
+                        Button(action: onClearMapDrawings) {
+                            Label("Clear", systemImage: "trash")
+                        }
+                        .buttonStyle(.bordered)
+
+                        Menu {
+                            ForEach(colorChoices, id: \.self) { color in
+                                Button {
+                                    selectedColor = color
+                                } label: {
+                                    Label(colorName(color), systemImage: "circle.fill")
+                                        .symbolRenderingMode(.palette)
+                                        .foregroundStyle(color)
+                                }
                             }
+                        } label: {
+                            Label("Color", systemImage: "paintpalette.fill")
+                        }
+
+                        Spacer(minLength: 0)
+
+                        Toggle(isOn: $drawingsLocked) {
+                            Label("Lock drawings", systemImage: drawingsLocked ? "lock.fill" : "lock.open")
+                                .labelStyle(.titleAndIcon)
+                        }
+                        .toggleStyle(SwitchToggleStyle(tint: .blue))
+                        .frame(maxWidth: 180, alignment: .trailing)
                     }
-                )
+                    .padding(12)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding([.horizontal, .bottom], 16)
+                    .frame(maxWidth: .infinity, alignment: .bottom)
+                    .background(
+                        GeometryReader { bannerProxy in
+                            Color.clear
+                                .onAppear {
+                                    // #region agent log
+                                    AgentDebugLogger.log(
+                                        runId: "initial",
+                                        hypothesisId: "H4",
+                                        location: "MapControlsView.swift:bottomBanner",
+                                        message: "Bottom banner rendered",
+                                        data: [
+                                            "minY": bannerProxy.frame(in: .global).minY,
+                                            "maxY": bannerProxy.frame(in: .global).maxY,
+                                            "rootHeight": rootProxy.size.height
+                                        ]
+                                    )
+                                    // #endregion
+                                }
+                        }
+                    )
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onAppear {
@@ -182,6 +172,47 @@ struct MapControlsView: View {
                 )
                 // #endregion
             }
+        }
+        .sheet(isPresented: $isSearchSheet, onDismiss: { showSuggestions = false }) {
+            NavigationView {
+                VStack(alignment: .leading, spacing: 12) {
+                    TextField("Search address", text: $searchText)
+                        .textFieldStyle(.roundedBorder)
+                        .submitLabel(.search)
+                        .onSubmit {
+                            onSearchAddress()
+                            isSearchSheet = false
+                        }
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                        .padding(.top, 6)
+                    
+                    if showSuggestions, !suggestions.isEmpty {
+                        SearchSuggestionsList(suggestions: suggestions) { completion in
+                            onSelectSuggestion(completion)
+                            isSearchSheet = false
+                        }
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                    
+                    Spacer()
+                }
+                .padding()
+                .navigationTitle("Search")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close") { isSearchSheet = false }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Search") {
+                            onSearchAddress()
+                            isSearchSheet = false
+                        }
+                    }
+                }
+                .onAppear { showSuggestions = true }
+            }
+            .presentationDetents([.medium])
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

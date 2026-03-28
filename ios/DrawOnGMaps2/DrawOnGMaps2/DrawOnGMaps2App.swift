@@ -5,7 +5,7 @@ import GoogleMaps
 struct DrawOnGMaps2App: App {
 
     init() {
-        GMSServices.provideAPIKey("add your api key.")
+        GMSServices.provideAPIKey("yourapikeyhere.")
         // #region agent log
         AgentDebugLogger.log(
             runId: "initial",

@@ -55,30 +55,47 @@ struct MapDrawingOverlayView: View {
     @Binding var isDrawing: Bool
     @Binding var paths: [GeoColoredPath]
     let strokeColor: Color
-    var mapView: GMSMapView?
+    @ObservedObject var bridge: MapBridge
     @Binding var centerCoordinate: CLLocationCoordinate2D
     @Binding var currentZoom: Float
 
     @State private var currentCoords: [CLLocationCoordinate2D] = []
+    
+    private var mapView: GMSMapView? { bridge.mapView }
 
     var body: some View {
-        GeometryReader { _ in
+        GeometryReader { geo in
+            let overlayOrigin = geo.frame(in: .global).origin
             ZStack {
                 ForEach(paths.indices, id: \.self) { idx in
-                    if let mapView {
-                        path(for: paths[idx].coords, mapView: mapView)
-                            .stroke(paths[idx].color, lineWidth: 4)
-                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                    }
+                    path(for: paths[idx].coords, overlayOrigin: overlayOrigin)
+                        .stroke(paths[idx].color, lineWidth: 4)
+                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
                 }
-                if let mapView, !currentCoords.isEmpty {
-                    path(for: currentCoords, mapView: mapView)
+                if !currentCoords.isEmpty {
+                    path(for: currentCoords, overlayOrigin: overlayOrigin)
                         .stroke(strokeColor, lineWidth: 4)
                         .opacity(isDrawing ? 1 : 0)
                 }
             }
             .contentShape(Rectangle())
-            .gesture(dragGesture)
+            .gesture(
+                DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                    .onChanged { value in
+                        guard isDrawing, let mapView else { return }
+                        // Convert drag point (global) into mapView coordinates using its global frame.
+                        let mapOriginGlobal = mapView.convert(CGPoint.zero, to: nil)
+                        let pointInMap = CGPoint(x: value.location.x - mapOriginGlobal.x,
+                                                 y: value.location.y - mapOriginGlobal.y)
+                        let coord = mapView.projection.coordinate(for: pointInMap)
+                        currentCoords.append(coord)
+                    }
+                    .onEnded { _ in
+                        guard isDrawing, !currentCoords.isEmpty else { return }
+                        paths.append(GeoColoredPath(coords: currentCoords, color: strokeColor))
+                        currentCoords = []
+                    }
+            )
             .allowsHitTesting(isDrawing)
         }
         // trigger redraw when camera changes
@@ -89,28 +106,24 @@ struct MapDrawingOverlayView: View {
         "\(centerCoordinate.latitude)-\(centerCoordinate.longitude)-\(currentZoom)"
     }
     
-    private func path(for coords: [CLLocationCoordinate2D], mapView: GMSMapView) -> Path {
+    private func path(for coords: [CLLocationCoordinate2D], overlayOrigin: CGPoint) -> Path {
+        guard let mapView else { return Path() }
+        let mapOriginGlobal = mapView.convert(CGPoint.zero, to: nil)
         var path = Path()
         guard let first = coords.first else { return path }
-        path.move(to: mapView.projection.point(for: first))
+        let firstPointMap = mapView.projection.point(for: first)
+        let firstPointGlobal = CGPoint(x: firstPointMap.x + mapOriginGlobal.x,
+                                       y: firstPointMap.y + mapOriginGlobal.y)
+        path.move(to: CGPoint(x: firstPointGlobal.x - overlayOrigin.x,
+                              y: firstPointGlobal.y - overlayOrigin.y))
         for coord in coords.dropFirst() {
-            path.addLine(to: mapView.projection.point(for: coord))
+            let pMap = mapView.projection.point(for: coord)
+            let pGlobal = CGPoint(x: pMap.x + mapOriginGlobal.x,
+                                  y: pMap.y + mapOriginGlobal.y)
+            path.addLine(to: CGPoint(x: pGlobal.x - overlayOrigin.x,
+                                     y: pGlobal.y - overlayOrigin.y))
         }
         return path
-    }
-    
-    private var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                guard isDrawing, let mapView else { return }
-                let coord = mapView.projection.coordinate(for: value.location)
-                currentCoords.append(coord)
-            }
-            .onEnded { _ in
-                guard isDrawing, !currentCoords.isEmpty else { return }
-                paths.append(GeoColoredPath(coords: currentCoords, color: strokeColor))
-                currentCoords = []
-            }
     }
 }
 
