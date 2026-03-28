@@ -23,4 +23,3 @@ struct DrawOnGMaps2App: App {
         }
     }
 }
-
