@@ -1,0 +1,19 @@
+# Xcode
+.DS_Store
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+*.ipa
+*.xcarchive
+
+# Swift Package Manager
+.build/
+*.xcconfig
+
+# Configuration files with secrets
+Config.swift
+config.swift
+
+# Environment files
+.env
+.env.local
